@@ -11,12 +11,15 @@ import * as serviceWorker from './serviceWorker';
 
 import './index.css';
 
+// eslint-disable-next-line no-underscore-dangle
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__({ maxAge: 15 }) || compose;
+
 const sagaMiddleware = createSagaMiddleware();
 
 const store = createStore(
   rootReducer,
   {},
-  compose(
+  composeEnhancers(
     applyMiddleware(
       sagaMiddleware,
     ),
