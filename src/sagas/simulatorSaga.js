@@ -151,7 +151,6 @@ function* pollPassengers() {
 }
 
 export default function* simulatorSaga() {
-  console.log('Simulator saga');
   /* This saga checks for any issues with the lift. */
   yield pollPassengers();
 }
