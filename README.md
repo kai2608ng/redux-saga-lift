@@ -8,10 +8,9 @@ You will receive button presses and sensor feedback from people moving between t
 Buttons:
 1. Button events are dispatched as actions with type, button, and optional data field. Type is always `liftActions.BUTTON_PRESS`.
 2. There are two buttons outside the lift at each floor.
-Corresponding button fields are: `floorButtonsEnum.UP`, `floorButtonsEnum.DOWN`
+Corresponding button fields are: `outsideButtonsEnum.UP`, `outsideButtonsEnum.DOWN`
 Data field for them will contain the floor at which they were requested.
-3. There are two door buttons inside the lift - `liftButtonsEnum.DOOR_OPEN` and `liftButtonsEnum.DOOR_CLOSE`.
-4. The lift also has a `liftButtonsEnum.FLOOR_REQUEST`. Data contains the floor number. 🙂
+3. There is one buton inside a lift `insideButtonsEnum.FLOOR_BUTTON`. Data contains the floor number. 🙂
 
 Sensors:
 1. When there is an object blocking doors `liftActions.DOOR_SENSOR_ON` will be dispatched.
@@ -26,10 +25,9 @@ Controlling the lift:
 Requirements:
 1. Lift should take a second to move between floors.
 2. Lift can't move with open doors.
-3. Lift can't move beyond last and first floor. It's dangerous.
+3. Lift can't move beyond the last and the first floor. It's dangerous.
 4. Lift should automatically open doors when it arrives at the desired floor.
 5. Lift should automatically close doors five second after the last person enters (or if no person enters)
-6. Lift can't close doors if there is anything blocking them, even if requested by passenger.
 
 ## Available Scripts
 

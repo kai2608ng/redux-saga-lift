@@ -17,7 +17,7 @@ function* checkDoorsOpen() {
 function* checkTopFloor() {
   const currentFloor = yield select(state => state.lift.currentFloor);
   const maximumFloor = yield select(state => state.lift.maximumFloor);
-  if (currentFloor >= maximumFloor) {
+  if (currentFloor > maximumFloor) {
     yield put(errorActions.pushError({
       error: 'Lift hit the ceiling causing.',
     }));
@@ -27,7 +27,7 @@ function* checkTopFloor() {
 function* checkBottomFloor() {
   const currentFloor = yield select(state => state.lift.currentFloor);
   const minimumFloor = 0;
-  if (currentFloor <= minimumFloor) {
+  if (currentFloor < minimumFloor) {
     yield put(errorActions.pushError({
       error: 'Lift tried moving below the ground floor.',
     }));
