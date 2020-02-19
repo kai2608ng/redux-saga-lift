@@ -9,6 +9,9 @@ export const OPEN_DOOR = '@lift/OPEN_DOOR';
 export const DOOR_SENSOR_OFF = '@lift/DOOR_SENSOR_OFF';
 export const DOOR_SENSOR_ON = '@lift/DOOR_SENSOR_ON';
 
+export const INCREMENT_PASSENGERS = '@lift/INCREMENT_PASSENGERS';
+export const DECREMENT_PASSENGERS = '@lift/DECREMENT_PASSENGERS';
+
 export const buttonPress = ({ button, data }) => ({
   type: BUTTON_PRESS,
   button,
@@ -37,4 +40,12 @@ export const closeDoor = () => ({
 
 export const openDoor = () => ({
   type: OPEN_DOOR,
+});
+
+export const incrementPassengers = () => ({
+  type: INCREMENT_PASSENGERS,
+});
+
+export const decrementPassengers = () => ({
+  type: DECREMENT_PASSENGERS,
 });

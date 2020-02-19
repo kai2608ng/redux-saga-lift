@@ -5,6 +5,7 @@ import simulatorSaga from './simulatorSaga';
 import testSaga from './testSaga';
 
 export default function* rootSaga() {
+  console.log('Root saga');
   yield all([
     liftSaga(),
     simulatorSaga(),
