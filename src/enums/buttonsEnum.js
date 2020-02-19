@@ -7,5 +7,5 @@ export default Object.freeze({
   OPEN_DOOR: 'OPEN_DOOR',
   CLOSE_DOOR: 'CLOSE_DOOR',
   */
-  SELECT_FLOOR: 'SELECT_FLOOR',
+  REQUEST_FLOOR: 'REQUEST_FLOOR',
 });

@@ -1,4 +1,5 @@
 import {
+  call,
   delay,
   fork,
   put,
@@ -97,7 +98,7 @@ function* processPassengerOutside({ startingFloor }) {
 
   /* Passenger enters lift if the door stays open long enough. */
   const enterLiftResult = yield race({
-    success: enterLift,
+    success: call(enterLift),
     failure: take(liftActions.CLOSE_DOOR),
   });
 
@@ -112,7 +113,7 @@ function* processPassengerInside({ destinationFloor }) {
 
   /* Passenger exits lift if the door stays open long enough. */
   const exitLiftResult = yield race({
-    success: exitLift,
+    success: call(exitLift),
     failure: take(liftActions.CLOSE_DOOR),
   });
 
@@ -136,16 +137,15 @@ function* addPassenger() {
   /* Passenger waits and leaves the lift. */
   yield processPassengerInside({ destinationFloor });
   /* Decrement passenger count. */
-  yield put(liftActions.incrementPassengers());
+  yield put(liftActions.decrementPassengers());
 }
 
 function* pollPassengers() {
-  console.log('Polling passengers');
   yield fork(function* () {
     while (true) {
-      /* A passenger will request a lift every 0 to 15 seconds. */
-      yield delay(Math.round(Math.random() * 15 * 1000));
+      /* A passenger will request a lift every 0 to 60 seconds. */
       yield fork(addPassenger);
+      yield delay(Math.round(Math.random() * 60 * 1000));
     }
   });
 }
