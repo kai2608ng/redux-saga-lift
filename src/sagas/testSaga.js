@@ -8,7 +8,7 @@ import sensorStateEnum from '../enums/sensorStateEnum';
 function* checkDoorsOpen() {
   const doorState = yield select(state => state.lift.doorState);
   if (doorState !== doorStateEnum.CLOSED) {
-    yield put(errorActions.pushError({
+    yield put(errorActions.setError({
       error: 'Lift tried moving with doors open.',
     }));
   }
@@ -18,7 +18,7 @@ function* checkTopFloor() {
   const currentFloor = yield select(state => state.lift.currentFloor);
   const maximumFloor = yield select(state => state.lift.maximumFloor);
   if (currentFloor > maximumFloor) {
-    yield put(errorActions.pushError({
+    yield put(errorActions.setError({
       error: 'Lift hit the ceiling causing.',
     }));
   }
@@ -28,7 +28,7 @@ function* checkBottomFloor() {
   const currentFloor = yield select(state => state.lift.currentFloor);
   const minimumFloor = 0;
   if (currentFloor < minimumFloor) {
-    yield put(errorActions.pushError({
+    yield put(errorActions.setError({
       error: 'Lift tried moving below the ground floor.',
     }));
   }
@@ -37,7 +37,7 @@ function* checkBottomFloor() {
 function* checkSensor() {
   const sensorState = yield select(state => state.lift.sensorState);
   if (sensorState === sensorStateEnum.ON) {
-    yield put(errorActions.pushError({
+    yield put(errorActions.setError({
       error: 'Lift tried closing its doors while passengers were moving through. Dangerous!',
     }));
   }

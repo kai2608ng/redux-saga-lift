@@ -6,7 +6,7 @@ import sensorStateEnum from '../enums/sensorStateEnum';
 const defaultState = Object.freeze({
   currentFloor: 0,
   maximumFloor: 10,
-  passengers: 0,
+  passengersCount: 0,
   doorState: doorStateEnum.CLOSED,
   sensorState: sensorStateEnum.OFF,
 });
@@ -52,13 +52,13 @@ export default function liftReducer(state = defaultState, action) {
     case liftActions.INCREMENT_PASSENGERS: {
       return Object.freeze({
         ...state,
-        passengers: state.passengers + 1,
+        passengersCount: state.passengersCount + 1,
       });
     }
     case liftActions.DECREMENT_PASSENGERS: {
       return Object.freeze({
         ...state,
-        passengers: state.passengers - 1,
+        passengersCount: state.passengersCount - 1,
       });
     }
     case reducerActions.RESET: {

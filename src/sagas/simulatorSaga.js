@@ -143,8 +143,8 @@ function* pollPassengers() {
   console.log('Polling passengers');
   yield fork(function* () {
     while (true) {
-      /* A passenger will request a lift every 0 to 30 seconds. */
-      yield delay(Math.round(Math.random() * 30 * 1000));
+      /* A passenger will request a lift every 0 to 15 seconds. */
+      yield delay(Math.round(Math.random() * 15 * 1000));
       yield fork(addPassenger);
     }
   });
