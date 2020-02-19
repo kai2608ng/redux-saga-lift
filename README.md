@@ -3,7 +3,9 @@
 ## Instructions
 
 You are tasked with programming a lift. 🙂
-You will receive button presses and sensor feedback from people moving between the doors and your task will be to move the lift between the floors, open and close doors for passengers, 
+You will receive button presses and sensor feedback from people moving between the doors and your task will be to move the lift between the floors, open and close doors for passengers.
+
+Add necessary code in sagas/liftSaga.js to program your lift.
 
 Buttons:
 1. Button events are dispatched as actions with type, button, and optional data field. Type is always `liftActions.BUTTON_PRESS`.
