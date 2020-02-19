@@ -1,4 +1,5 @@
 import * as liftActions from '../actions/liftActions';
+import * as reducerActions from '../actions/reducerActions';
 import doorStateEnum from '../enums/doorStateEnum';
 import sensorStateEnum from '../enums/sensorStateEnum';
 
@@ -46,6 +47,9 @@ export default function liftReducer(state = defaultState, action) {
         ...state,
         sensorState: sensorStateEnum.ON,
       });
+    }
+    case reducerActions.RESET: {
+      return defaultState;
     }
     default:
       return state;
