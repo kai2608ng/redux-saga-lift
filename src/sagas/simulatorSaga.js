@@ -10,6 +10,7 @@ import {
 
 import * as liftActions from '../actions/liftActions';
 import buttonsEnum from '../enums/buttonsEnum';
+import sensorStateEnum from '../enums/sensorStateEnum';
 
 function* getStartingFloor() {
   const maximumFloor = yield select(state => state.lift.maximumFloor);
@@ -66,15 +67,29 @@ function* awaitLift({ floor }) {
   }
 }
 
+function* blockSensor() {
+  const sensorState = yield select(state => state.lift.sensorState);
+  if (sensorState !== sensorStateEnum.ON) {
+    yield put(liftActions.doorSensorOn());
+  }
+}
+
+function* unblockSensor() {
+  const sensorState = yield select(state => state.lift.sensorState);
+  if (sensorState !== sensorStateEnum.OFF) {
+    yield put(liftActions.doorSensorOff());
+  }
+}
+
 function* enterLift() {
   /* Take between 0 and 5 seconds to start entering. */
   yield delay(Math.round(Math.random() * 5 * 1000));
   /* Block sensor. */
-  yield put(liftActions.doorSensorOn());
+  yield blockSensor();
   /* Take between 0 and 2 seconds to finish entering. */
   yield delay(Math.round(Math.random() * 2 * 1000));
   /* Unblock sensor. */
-  yield put(liftActions.doorSensorOff());
+  yield unblockSensor();
 
   return true;
 }
@@ -83,11 +98,11 @@ function* exitLift() {
   /* Take between 0 and 3 seconds to start exiting. */
   yield delay(Math.round(Math.random() * 5 * 1000));
   /* Block sensor. */
-  yield put(liftActions.doorSensorOn());
+  yield blockSensor();
   /* Take between 0 and 2 seconds to finish exiting. */
   yield delay(Math.round(Math.random() * 2 * 1000));
   /* Unblock sensor. */
-  yield put(liftActions.doorSensorOff());
+  yield unblockSensor();
 
   return true;
 }
