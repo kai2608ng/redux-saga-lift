@@ -10,6 +10,7 @@ import {
 
 import * as liftActions from '../actions/liftActions';
 import buttonsEnum from '../enums/buttonsEnum';
+import doorStateEnum from '../enums/doorStateEnum';
 import sensorStateEnum from '../enums/sensorStateEnum';
 
 function* getStartingFloor() {
@@ -60,9 +61,14 @@ function* pressFloorButton({ destinationFloor }) {
 }
 
 function* awaitLift({ floor }) {
-  yield take(liftActions.OPEN_DOOR);
+  const doorState = yield select(state => state.lift.doorState);
+  if (doorState !== doorStateEnum.OPEN) {
+    yield take(liftActions.OPEN_DOOR);
+  }
+
   const currentFloor = yield select(state => state.lift.currentFloor);
   if (currentFloor !== floor) {
+    yield take(liftActions.CLOSE_DOOR);
     yield awaitLift({ floor });
   }
 }
@@ -160,7 +166,7 @@ function* pollPassengers() {
     while (true) {
       /* A passenger will request a lift every 0 to 60 seconds. */
       yield fork(addPassenger);
-      yield delay(Math.round(Math.random() * 60 * 1000));
+      yield delay(Math.round(Math.random() * 20 * 1000));
     }
   });
 }
