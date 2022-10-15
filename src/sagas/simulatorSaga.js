@@ -101,8 +101,8 @@ function* enterLift() {
 }
 
 function* exitLift() {
-	/* Take between 0 and 3 seconds to start exiting. */
-	yield delay(Math.round(Math.random() * 3 * 1000));
+	/* Take between 0 and 5 seconds to start exiting. */
+	yield delay(Math.round(Math.random() * 5 * 1000));
 	/* Block sensor. */
 	yield blockSensor();
 	/* Take between 0 and 2 seconds to finish exiting. */
@@ -124,6 +124,7 @@ function* processPassengerOutside({ startingFloor }) {
 	});
 
 	if (enterLiftResult.failure) {
+		yield put(liftActions.pendingLift({ pendingFloor: startingFloor }));
 		yield processPassengerOutside({ startingFloor });
 	}
 }
@@ -138,9 +139,9 @@ function* processPassengerInside({ destinationFloor }) {
 		failure: take(liftActions.CLOSE_DOOR),
 	});
 
-	// @bug
 	if (exitLiftResult.failure) {
-		yield processPassengerOutside({ destinationFloor });
+		yield put(liftActions.pendingLift({ pendingFloor: destinationFloor }));
+		yield processPassengerInside({ destinationFloor });
 	}
 }
 

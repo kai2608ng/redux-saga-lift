@@ -13,8 +13,9 @@ export const DOOR_SENSOR_ON = '@lift/DOOR_SENSOR_ON';
 export const INCREMENT_PASSENGERS = '@lift/INCREMENT_PASSENGERS';
 export const DECREMENT_PASSENGERS = '@lift/DECREMENT_PASSENGERS';
 
-export const PASSENGER_CALL_LIFT = '@lift/PASSENGER_CALL_LIFT';
-export const REQUEST_CALL_LIFT = '@lift/REQUEST_CALL_LIFT';
+export const CALL_LIFT = '@lift/CALL_LIFT';
+export const PENDING_LIFT = '@lift/PENDING_LIFT';
+export const PENDING_TO_ONGOING = '@lift/PENDING_TO_ONGOING';
 
 export const REMOVE_CALL = '@lift/REMOVE_CALL';
 export const REMOVE_REQUEST = '@lift/REMOVE_REQUEST';
@@ -23,18 +24,18 @@ export const removeCall = () => ({
 	type: REMOVE_CALL,
 });
 
-export const removeRequest = () => ({
-	type: REMOVE_REQUEST,
+export const callLift = ({ callFloor }) => ({
+	type: CALL_LIFT,
+	callFloor,
 });
 
-export const passengerCallLift = ({ passengerFloor }) => ({
-	type: PASSENGER_CALL_LIFT,
-	passengerFloor,
+export const pendingLift = ({ pendingFloor }) => ({
+	type: PENDING_LIFT,
+	pendingFloor,
 });
 
-export const requestCallLift = ({ requestFloor }) => ({
-	type: REQUEST_CALL_LIFT,
-	requestFloor,
+export const pendingToOngoing = () => ({
+	type: PENDING_TO_ONGOING,
 });
 
 export const buttonPress = ({ button, data }) => ({

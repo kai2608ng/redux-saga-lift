@@ -2,6 +2,7 @@ import * as liftActions from '../actions/liftActions';
 import * as reducerActions from '../actions/reducerActions';
 import doorStateEnum from '../enums/doorStateEnum';
 import sensorStateEnum from '../enums/sensorStateEnum';
+import movingDirectionEnum from '../enums/movingDirectionEnum';
 import * as utils from '../utils';
 
 const defaultState = Object.freeze({
@@ -10,9 +11,9 @@ const defaultState = Object.freeze({
 	passengersCount: 0,
 	doorState: doorStateEnum.CLOSED,
 	sensorState: sensorStateEnum.OFF,
-	passengersRequestFloor: [],
-	passengersFloor: [],
-	movingDirection: '',
+	liftOngoingFloor: [],
+	liftPendingFloor: [],
+	movingDirection: movingDirectionEnum.NOT_MOVING,
 });
 
 export default function liftReducer(state = defaultState, action) {
@@ -65,27 +66,31 @@ export default function liftReducer(state = defaultState, action) {
 				passengersCount: state.passengersCount - 1,
 			});
 		}
-		case liftActions.PASSENGER_CALL_LIFT: {
-			const passengerFloor = action.passengerFloor;
+		case liftActions.CALL_LIFT: {
+			const callFloor = action.callFloor;
 			return Object.freeze({
 				...state,
-				passengersFloor: utils.sortClosestPassenger(state, passengerFloor),
+				liftOngoingFloor: utils.sortOngoing(state, callFloor),
 			});
 		}
-		case liftActions.REQUEST_CALL_LIFT: {
-			const requestFloor = action.requestFloor;
+		case liftActions.PENDING_LIFT: {
+			const pendingFloor = action.pendingFloor;
 			return Object.freeze({
 				...state,
-				passengersRequestFloor: utils.sortClosestRequestFloor(
-					state,
-					requestFloor
-				),
+				liftPendingFloor: utils.sortPending(state, pendingFloor),
+			});
+		}
+		case liftActions.PENDING_TO_ONGOING: {
+			return Object.freeze({
+				...state,
+				liftOngoingFloor: [...state.liftPendingFloor],
+				liftPendingFloor: [],
 			});
 		}
 		case liftActions.REMOVE_CALL: {
 			return Object.freeze({
 				...state,
-				passengersFloor: utils.removeReachedCall(state),
+				liftOngoingFloor: utils.removeReachedCall(state),
 			});
 		}
 		case liftActions.SET_DIRECTION: {

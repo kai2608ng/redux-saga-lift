@@ -1,31 +1,45 @@
-export function sortClosestPassenger(state, newPassengerFloor) {
-	const passengersFloor = [...state.passengersFloor];
+import movingDirectionEnum from './enums/movingDirectionEnum';
+
+export function sortOngoing(state, callFloor) {
+	const liftOngoingFloor = [...state.liftOngoingFloor];
 	const movingDirection = state.movingDirection;
-	const floorSet = new Set(passengersFloor);
+	const ongoingFloorSet = new Set(liftOngoingFloor);
 
-	if (floorSet.has(newPassengerFloor)) return state.passengersFloor;
+	if (!ongoingFloorSet.has(callFloor)) liftOngoingFloor.push(callFloor);
 
-	passengersFloor.push(newPassengerFloor);
-	passengersFloor.sort();
+	if (movingDirection === movingDirectionEnum.DOWN) {
+		// Descending Order
+		liftOngoingFloor.sort().reverse();
+	}
 
-	return passengersFloor;
+	if (movingDirection === movingDirectionEnum.UP)
+		/// Ascending Order
+		liftOngoingFloor.sort();
+
+	return liftOngoingFloor;
 }
 
-export function sortClosestRequestFloor(state, newRequestFloor) {
-	const passengersRequestFloor = [...state.passengersRequestFloor];
-	const requestFloorSet = new Set(passengersRequestFloor);
+export function sortPending(state, pendingFloor) {
+	const liftPendingFloor = [...state.liftPendingFloor];
+	const movingDirection = state.movingDireciton;
+	const pendingFloorSet = new Set(liftPendingFloor);
 
-	if (requestFloorSet.has(newRequestFloor)) return state.passengersRequestFloor;
+	if (!pendingFloorSet.has(pendingFloor)) liftPendingFloor.push(pendingFloor);
 
-	passengersRequestFloor.push(newRequestFloor);
-	passengersRequestFloor.sort();
+	if (movingDirection === movingDirectionEnum.DOWN) {
+		liftPendingFloor.sort();
+	}
 
-	return passengersRequestFloor;
+	if (movingDirection === movingDirectionEnum.UP) {
+		liftPendingFloor.sort().reverse();
+	}
+
+	return liftPendingFloor;
 }
 
 export function removeReachedCall(state) {
-	const passengersFloor = [...state.passengersFloor];
-	passengersFloor.shift();
+	const liftOngoingFloor = [...state.liftOngoingFloor];
+	liftOngoingFloor.shift();
 
-	return passengersFloor;
+	return liftOngoingFloor;
 }
