@@ -6,19 +6,23 @@ import {
 	select,
 	take,
 	takeEvery,
-	takeLeading,
 } from 'redux-saga/effects';
 import buttonsEnum from '../enums/buttonsEnum';
 import * as liftActions from '../actions/liftActions';
 import doorStateEnum from '../enums/doorStateEnum';
 import movingDirectionEnum from '../enums/movingDirectionEnum';
+import sensorStateEnum from '../enums/sensorStateEnum';
 
 function* liftMoveUp() {
 	const doorState = yield select((state) => state.lift.doorState);
 	if (doorState === doorStateEnum.CLOSED) {
 		yield delay(500);
 		yield put(liftActions.moveUp());
+		return;
 	}
+	// If the door hasn't close
+	yield take(liftActions.CLOSE_DOOR);
+	yield call(liftMoveUp);
 }
 
 function* liftMoveDown() {
@@ -26,21 +30,43 @@ function* liftMoveDown() {
 	if (doorState === doorStateEnum.CLOSED) {
 		yield delay(500);
 		yield put(liftActions.moveDown());
+		return;
 	}
+
+	// If the door hasn't close
+	yield take(liftActions.CLOSE_DOOR);
+	yield call(liftMoveUp);
+}
+
+function* trackSensorStateOff() {
+	// delay for opening the door
+	yield delay(1000);
+
+	const sensorState = yield select((state) => state.lift.sensorState);
+	if (sensorState !== sensorStateEnum.OFF) {
+		yield take(liftActions.DOOR_SENSOR_OFF);
+		yield call(trackSensorStateOff);
+	}
+}
+
+function* handleDoor() {
+	const doorState = yield select((state) => state.lift.doorState);
+
+	if (doorState !== doorStateEnum.OPEN) yield put(liftActions.openDoor());
+
+	yield take(liftActions.DOOR_SENSOR_ON);
+	// Block to track sensor off
+	yield call(trackSensorStateOff);
+
+	yield put(liftActions.closeDoor());
 }
 
 function* liftReached() {
 	// Remove the floor that calls the lift
 	yield put(liftActions.removeCall());
 
-	const doorState = yield select((state) => state.lift.doorState);
-
-	if (doorState !== doorStateEnum.OPEN) {
-		yield put(liftActions.openDoor());
-		yield take(liftActions.DOOR_SENSOR_ON);
-		yield take(liftActions.DOOR_SENSOR_OFF);
-		yield put(liftActions.closeDoor());
-	}
+	// Open Close the door
+	yield call(handleDoor);
 
 	// Search the next floor to go
 	yield call(handleNextFloor);
@@ -94,21 +120,21 @@ function* checkCallFloor({ callFloor }) {
 
 			break;
 		}
-		case movingDirectionEnum.NOT_MOVING:
-			{
-				if (currentFloor < callFloor)
-					yield put(
-						liftActions.setDirection({ direction: movingDirectionEnum.UP })
-					);
-				else if (currentFloor > callFloor)
-					yield put(
-						liftActions.setDirection({ direction: movingDirectionEnum.DOWN })
-					);
-				yield put(liftActions.callLift({ callFloor }));
-				yield call(handleMove);
-				break;
-			}
-
+		case movingDirectionEnum.NOT_MOVING: {
+			if (currentFloor < callFloor)
+				yield put(
+					liftActions.setDirection({ direction: movingDirectionEnum.UP })
+				);
+			else if (currentFloor > callFloor)
+				yield put(
+					liftActions.setDirection({ direction: movingDirectionEnum.DOWN })
+				);
+			yield put(liftActions.callLift({ callFloor }));
+			// Only when lift is not moving
+			yield call(handleMove);
+			break;
+		}
+		default:
 			return;
 	}
 }
@@ -164,6 +190,8 @@ function* handleButtonPress(action) {
 			yield call(handleCallRequest, action.data);
 			break;
 		}
+		default:
+			return;
 	}
 }
 

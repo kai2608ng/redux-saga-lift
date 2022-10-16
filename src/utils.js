@@ -21,16 +21,18 @@ export function sortOngoing(state, callFloor) {
 
 export function sortPending(state, pendingFloor) {
 	const liftPendingFloor = [...state.liftPendingFloor];
-	const movingDirection = state.movingDireciton;
+	const movingDirection = state.movingDirection;
 	const pendingFloorSet = new Set(liftPendingFloor);
 
 	if (!pendingFloorSet.has(pendingFloor)) liftPendingFloor.push(pendingFloor);
 
 	if (movingDirection === movingDirectionEnum.DOWN) {
+		// Ascending Order
 		liftPendingFloor.sort();
 	}
 
 	if (movingDirection === movingDirectionEnum.UP) {
+		// Descending Order
 		liftPendingFloor.sort().reverse();
 	}
 
