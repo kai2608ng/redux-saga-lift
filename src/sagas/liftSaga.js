@@ -1,209 +1,293 @@
 import {
-	all,
-	call,
-	delay,
-	put,
-	select,
-	take,
-	takeEvery,
-} from 'redux-saga/effects';
-import buttonsEnum from '../enums/buttonsEnum';
-import * as liftActions from '../actions/liftActions';
-import doorStateEnum from '../enums/doorStateEnum';
-import movingDirectionEnum from '../enums/movingDirectionEnum';
-import sensorStateEnum from '../enums/sensorStateEnum';
+  all,
+  call,
+  delay,
+  put,
+  select,
+  take,
+  takeEvery,
+} from "redux-saga/effects";
+import buttonsEnum from "../enums/buttonsEnum";
+import * as liftActions from "../actions/liftActions";
+import doorStateEnum from "../enums/doorStateEnum";
+import movingDirectionEnum from "../enums/movingDirectionEnum";
+import sensorStateEnum from "../enums/sensorStateEnum";
 
 function* liftMoveUp() {
-	const doorState = yield select((state) => state.lift.doorState);
-	if (doorState === doorStateEnum.CLOSED) {
-		yield delay(500);
-		yield put(liftActions.moveUp());
-		return;
-	}
-	// If the door hasn't close
-	yield take(liftActions.CLOSE_DOOR);
-	yield call(liftMoveUp);
+  const doorState = yield select((state) => state.lift.doorState);
+
+  if (doorState === doorStateEnum.CLOSED) {
+    yield delay(500);
+    yield put(liftActions.moveUp());
+  }
 }
 
 function* liftMoveDown() {
-	const doorState = yield select((state) => state.lift.doorState);
-	if (doorState === doorStateEnum.CLOSED) {
-		yield delay(500);
-		yield put(liftActions.moveDown());
-		return;
-	}
+  const doorState = yield select((state) => state.lift.doorState);
 
-	// If the door hasn't close
-	yield take(liftActions.CLOSE_DOOR);
-	yield call(liftMoveUp);
+  if (doorState === doorStateEnum.CLOSED) {
+    yield delay(500);
+    yield put(liftActions.moveDown());
+  }
 }
 
 function* trackSensorStateOff() {
-	// delay for opening the door
-	yield delay(1000);
+  // delay for opening the door
+  yield delay(2000);
 
-	const sensorState = yield select((state) => state.lift.sensorState);
-	if (sensorState !== sensorStateEnum.OFF) {
-		yield take(liftActions.DOOR_SENSOR_OFF);
-		yield call(trackSensorStateOff);
-	}
+  const sensorState = yield select((state) => state.lift.sensorState);
+
+  if (sensorState !== sensorStateEnum.OFF) {
+    yield call(trackSensorStateOff);
+  }
 }
 
 function* handleDoor() {
-	const doorState = yield select((state) => state.lift.doorState);
+  const doorState = yield select((state) => state.lift.doorState);
 
-	if (doorState !== doorStateEnum.OPEN) yield put(liftActions.openDoor());
+  if (doorState !== doorStateEnum.OPEN) yield put(liftActions.openDoor());
 
-	yield take(liftActions.DOOR_SENSOR_ON);
-	// Block to track sensor off
-	yield call(trackSensorStateOff);
+  yield take(liftActions.DOOR_SENSOR_ON);
+  // Block to track sensor off
+  yield call(trackSensorStateOff);
 
-	yield put(liftActions.closeDoor());
+  yield put(liftActions.closeDoor());
 }
 
 function* liftReached() {
-	// Remove the floor that calls the lift
-	yield put(liftActions.removeCall());
+  // Remove the floor that calls the lift
+  yield put(liftActions.removeCall());
 
-	// Open Close the door
-	yield call(handleDoor);
+  // Open Close the door
+  yield call(handleDoor);
 
-	// Search the next floor to go
-	yield call(handleNextFloor);
+  // Search the next floor to go
+  yield call(handleNextFloor);
 }
 
 function* handleNextFloor() {
-	const liftOngoingFloor = yield select((state) => state.lift.liftOngoingFloor);
-	const liftPendingFloor = yield select((state) => state.lift.liftPendingFloor);
-	const movingDirection = yield select((state) => state.lift.movingDirection);
+  const liftOngoingFloor = yield select((state) => state.lift.liftOngoingFloor);
+  const liftPendingFloor = yield select((state) => state.lift.liftPendingFloor);
+  const movingDirection = yield select((state) => state.lift.movingDirection);
 
-	if (!liftOngoingFloor.length) {
-		if (!liftPendingFloor.length) {
-			yield put(
-				liftActions.setDirection({ direction: movingDirectionEnum.NOT_MOVING })
-			);
-			return;
-		}
-		// Set the pending queue to ongoing queue and reset pending queue
-		yield put(liftActions.pendingToOngoing());
-		// Reverse the direction
-		yield movingDirection === movingDirectionEnum.UP
-			? put(liftActions.setDirection({ direction: movingDirectionEnum.DOWN }))
-			: put(liftActions.setDirection({ direction: movingDirectionEnum.UP }));
-	}
+  if (!liftOngoingFloor.length) {
+    if (!liftPendingFloor.length) {
+      const lock = yield select((state) => state.lift.lock);
+      // To enable only a single lift movement
+      if (lock) {
+        yield put(liftActions.setUnlock());
+        yield put(
+          liftActions.setDirection({
+            direction: movingDirectionEnum.NOT_MOVING,
+          })
+        );
+        return;
+      }
+    }
+    // Set the pending queue to ongoing queue and reset pending queue
+    yield put(liftActions.pendingToOngoing());
+    // Reverse the direction
+    yield movingDirection === movingDirectionEnum.UP
+      ? put(liftActions.setDirection({ direction: movingDirectionEnum.DOWN }))
+      : put(liftActions.setDirection({ direction: movingDirectionEnum.UP }));
+  }
 
-	// Move the lift
-	yield call(handleMove);
-}
-
-// Check the call floor should be in the pending queue or ongoing queue
-function* checkCallFloor({ callFloor }) {
-	const currentFloor = yield select((state) => state.lift.currentFloor);
-	const movingDirection = yield select((state) => state.lift.movingDirection);
-
-	switch (movingDirection) {
-		case movingDirectionEnum.UP: {
-			// Only assign those floor that are higher than current floor
-			if (currentFloor < callFloor)
-				yield put(liftActions.callLift({ callFloor }));
-			else if (currentFloor > callFloor)
-				yield put(liftActions.pendingLift({ pendingFloor: callFloor }));
-
-			break;
-		}
-		case movingDirectionEnum.DOWN: {
-			// Only assign those floor that are lower than current floor
-			if (currentFloor > callFloor) {
-				yield put(liftActions.callLift({ callFloor }));
-			} else if (currentFloor < callFloor)
-				yield put(liftActions.pendingLift({ pendingFloor: callFloor }));
-
-			break;
-		}
-		case movingDirectionEnum.NOT_MOVING: {
-			if (currentFloor < callFloor)
-				yield put(
-					liftActions.setDirection({ direction: movingDirectionEnum.UP })
-				);
-			else if (currentFloor > callFloor)
-				yield put(
-					liftActions.setDirection({ direction: movingDirectionEnum.DOWN })
-				);
-			yield put(liftActions.callLift({ callFloor }));
-			// Only when lift is not moving
-			yield call(handleMove);
-			break;
-		}
-		default:
-			return;
-	}
-}
-
-function* handleCall(passengerFloor) {
-	// Assign the current floor of the passenger to the lift
-	yield call(checkCallFloor, { callFloor: passengerFloor });
-}
-
-function* handleCallRequest(passengerRequestFloor) {
-	// Assign the requested floor to the lift
-	yield call(checkCallFloor, { callFloor: passengerRequestFloor });
+  // Move the lift
+  yield call(handleMove);
 }
 
 function* handleMove() {
-	// Get the current floor of the lift
-	const liftCurrentFloor = yield select((state) => state.lift.currentFloor);
-	// Get the floor that is closest to the lift
-	const liftOngoingFloor = yield select(
-		(state) => state.lift.liftOngoingFloor[0]
-	);
+  // Get the current floor of the lift
+  const liftCurrentFloor = yield select((state) => state.lift.currentFloor);
+  // Get the floor that is closest to the lift
+  const liftOngoingFloor = yield select(
+    (state) => state.lift.liftOngoingFloor[0]
+  );
 
-	// Move down if current floor higher than ongoing floor
-	if (liftCurrentFloor > liftOngoingFloor) {
-		yield call(liftMoveDown);
-	}
+  // Move down if current floor higher than ongoing floor
+  if (liftCurrentFloor > liftOngoingFloor) {
+    yield call(liftMoveDown);
+  }
+  // Move up if current floor lower than ongoing floor
+  if (liftCurrentFloor < liftOngoingFloor) {
+    yield call(liftMoveUp);
+  }
+  // Reached the ongoing floor
+  if (liftCurrentFloor === liftOngoingFloor) {
+    yield call(liftReached);
+  }
+}
 
-	// Move up if current floor lower than ongoing floor
-	if (liftCurrentFloor < liftOngoingFloor) {
-		yield call(liftMoveUp);
-	}
+// Press Up button at Ground Floor
+function* handleCallUp(passengerFloor) {
+  const currentDirection = yield select((state) => state.lift.movingDirection);
 
-	// Reached the ongoing floor
-	if (liftCurrentFloor === liftOngoingFloor) {
-		yield call(liftReached);
-	}
+  if (currentDirection === movingDirectionEnum.NOT_MOVING) {
+    // Let the lift know that UP button is pressed
+    yield put(liftActions.setDirection({ direction: movingDirectionEnum.UP }));
+    yield put(liftActions.callLift({ callFloor: passengerFloor }));
+    // To enable only a single lift movement
+    const lock = yield select((state) => state.lift.lock);
+    if (!lock) {
+      yield put(liftActions.setLock());
+      yield call(handleMove);
+    }
+    return;
+  }
+
+  const currentFloor = yield select((state) => state.lift.currentFloor);
+  const doorState = yield select((state) => state.lift.doorState);
+  // Do not assign if lift reached to the passenger and the door is opened
+  if (currentFloor !== passengerFloor || doorState === doorStateEnum.CLOSED)
+    yield put(liftActions.pendingLift({ pendingFloor: passengerFloor }));
+
+  // Since passenger will wait for the lift reach to them
+  // If they failed to enter
+  // They will press the button again
+}
+
+// Press Down button at any floor other than ground floor
+function* handleCallDown(passengerFloor) {
+  const currentDirection = yield select((state) => state.lift.movingDirection);
+
+  if (currentDirection === movingDirectionEnum.NOT_MOVING) {
+    // Let the lift know that the DOWN button is pressed
+    yield put(
+      liftActions.setDirection({ direction: movingDirectionEnum.DOWN })
+    );
+    yield put(liftActions.callLift({ callFloor: passengerFloor }));
+
+    const lock = yield select((state) => state.lift.lock);
+    // To enable only a single lift movement
+    if (!lock) {
+      yield put(liftActions.setLock());
+      yield call(handleMove);
+    }
+  }
+
+  if (currentDirection === movingDirectionEnum.UP) {
+    const currentFloor = yield select((state) => state.lift.currentFloor);
+    const doorState = yield select((state) => state.lift.doorState);
+    // Do not assign if lift reached to the passenger and the door is opened
+    if (currentFloor !== passengerFloor || doorState === doorStateEnum.CLOSED)
+      yield put(liftActions.pendingLift({ pendingFloor: passengerFloor }));
+  }
+
+  if (currentDirection === movingDirectionEnum.DOWN) {
+    const currentFloor = yield select((state) => state.lift.currentFloor);
+
+    if (currentFloor <= passengerFloor) {
+      const doorState = yield select((state) => state.lift.doorState);
+      // Do not assign if lift reached to the passenger and the door is opened
+      if (currentFloor !== passengerFloor || doorState === doorStateEnum.CLOSED)
+        yield put(liftActions.pendingLift({ pendingFloor: passengerFloor }));
+    } else yield put(liftActions.callLift({ callFloor: passengerFloor }));
+  }
+
+  // Since passenger will wait for the lift reach to them
+  // If they failed to enter
+  // They will press the button again
+}
+
+// Within the lift
+function* handleCallRequest(passengerRequestFloor) {
+  const currentDirection = yield select((state) => state.lift.movingDirection);
+
+  if (currentDirection === movingDirectionEnum.NOT_MOVING) {
+    yield put(liftActions.callLift({ callFloor: passengerRequestFloor }));
+
+    const currentFloor = yield select((state) => state.lift.currentFloor);
+
+    if (currentFloor < passengerRequestFloor)
+      yield put(
+        liftActions.setDirection({ direction: movingDirectionEnum.UP })
+      );
+    else if (currentFloor > passengerRequestFloor)
+      yield put(
+        liftActions.setDirection({ direction: movingDirectionEnum.DOWN })
+      );
+    // To enable only a single lift movement
+    const lock = yield select((state) => state.lift.lock);
+    if (!lock) {
+      yield put(liftActions.setLock());
+      yield call(handleMove);
+    }
+  }
+
+  if (currentDirection === movingDirectionEnum.UP) {
+    const currentFloor = yield select((state) => state.lift.currentFloor);
+    // Assign higher floor to lift when moving upwards
+    if (passengerRequestFloor > currentFloor)
+      yield put(liftActions.callLift({ callFloor: passengerRequestFloor }));
+    else {
+      const doorState = yield select((state) => state.lift.doorState);
+      // Do not assign if lift reached to the passenger and the door is opened
+      if (
+        currentFloor !== passengerRequestFloor ||
+        doorState === doorStateEnum.CLOSED
+      )
+        yield put(
+          liftActions.pendingLift({ pendingFloor: passengerRequestFloor })
+        );
+    }
+  }
+
+  if (currentDirection === movingDirectionEnum.DOWN) {
+    const currentFloor = yield select((state) => state.lift.currentFloor);
+    // Assign lower floor to lift when moving downwards
+    if (currentFloor > passengerRequestFloor)
+      yield put(liftActions.callLift({ callFloor: passengerRequestFloor }));
+    else {
+      const doorState = yield select((state) => state.lift.doorState);
+      // Do not assign if lift reached to the passenger and the door is opened
+      if (
+        currentFloor !== passengerRequestFloor ||
+        doorState === doorStateEnum.CLOSED
+      )
+        yield put(
+          liftActions.pendingLift({ pendingFloor: passengerRequestFloor })
+        );
+    }
+  }
+  // Since passenger will wait for the lift to reach the floor they requested
+  // If they failed to exit
+  // They will press the button again
 }
 
 function* handleButtonPress(action) {
-	switch (action.button) {
-		// passenger press button on any floor other than ground floor
-		case buttonsEnum.CALL_DOWN: {
-			yield call(handleCall, action.data);
-			break;
-		}
-		// passenger press button on ground floor
-		case buttonsEnum.CALL_UP: {
-			yield call(handleCall, action.data);
-			break;
-		}
-		// passenger press button within the lift
-		case buttonsEnum.REQUEST_FLOOR: {
-			yield call(handleCallRequest, action.data);
-			break;
-		}
-		default:
-			return;
-	}
+  switch (action.button) {
+    // passenger press button on any floor other than ground floor
+    case buttonsEnum.CALL_DOWN: {
+      const passengerCurrentFloor = action.data;
+      yield call(handleCallDown, passengerCurrentFloor);
+      return;
+    }
+    // passenger press button on ground floor
+    case buttonsEnum.CALL_UP: {
+      const passengerCurrentFloor = action.data;
+      yield call(handleCallUp, passengerCurrentFloor);
+      return;
+    }
+    // passenger press button within the lift
+    case buttonsEnum.REQUEST_FLOOR: {
+      const passengerRequestFloor = action.data;
+      yield call(handleCallRequest, passengerRequestFloor);
+      return;
+    }
+    default:
+      return;
+  }
 }
 
 function* buttonPress() {
-	yield takeEvery(liftActions.BUTTON_PRESS, handleButtonPress);
+  yield takeEvery(liftActions.BUTTON_PRESS, handleButtonPress);
 }
 
 function* watchLiftMove() {
-	yield takeEvery(liftActions.MOVE_UP, handleMove);
-	yield takeEvery(liftActions.MOVE_DOWN, handleMove);
+  yield takeEvery(liftActions.MOVE_UP, handleMove);
+  yield takeEvery(liftActions.MOVE_DOWN, handleMove);
 }
 
 export default function* liftSaga() {
-	yield all([buttonPress(), watchLiftMove()]);
+  yield all([buttonPress(), watchLiftMove()]);
 }
