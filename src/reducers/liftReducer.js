@@ -116,7 +116,6 @@ export default function liftReducer(state = defaultState, action) {
     case liftActions.PENDING_TO_ONGOING: {
       const { movingDirection, liftOngoingFloor, liftPendingFloor } =
         utils.pendingToOngoing(state);
-      utils.pendingToOngoing(state);
       return Object.freeze({
         ...state,
         movingDirection,

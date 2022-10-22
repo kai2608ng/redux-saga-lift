@@ -143,9 +143,7 @@ function* handleMove() {
   // Get the current floor of the lift
   const liftCurrentFloor = yield select((state) => state.lift.currentFloor);
   // Get the floor that is closest to the lift
-  const liftOngoingFloor = yield select((state) => state.lift.liftOngoingFloor);
-  console.log("liftOngoingFloor.length: ", liftOngoingFloor.length);
-  const { callFloor } = liftOngoingFloor[0];
+  const { callFloor } = yield select((state) => state.lift.liftOngoingFloor[0]);
   // Move down if current floor higher than ongoing floor
   if (liftCurrentFloor > callFloor) {
     yield call(liftMoveDown);
@@ -311,11 +309,13 @@ function* handleCallRequest({ passengerRequestFloor, buttonPress }) {
   }
 
   if (currentMovingDirection === movingDirectionEnum.PENDING_MOVING_UP) {
-    yield put(liftActions.setButtonPress({ buttonPress }));
-    yield put(
-      liftActions.callLift({ callFloor: passengerRequestFloor, buttonPress })
-    );
-    return;
+    if (currentFloor < passengerRequestFloor) {
+      yield put(liftActions.setButtonPress({ buttonPress }));
+      yield put(
+        liftActions.callLift({ callFloor: passengerRequestFloor, buttonPress })
+      );
+      return;
+    }
   }
 
   if (currentMovingDirection === movingDirectionEnum.PENDING_MOVING_DOWN) {

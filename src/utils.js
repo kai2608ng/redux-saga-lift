@@ -189,7 +189,7 @@ export function pendingToOngoing(state) {
     currentButtonPress === buttonsEnum.CALL_UP ||
     (currentButtonPress === buttonsEnum.REQUEST_FLOOR && currentFloor === 0)
   ) {
-    movingDirection = movingDirectionEnum.MOVING_UP;
+    movingDirection = movingDirectionEnum.UP;
 
     let requestFloor = liftPendingFloor.filter(
       (floor) => floor.buttonPress === buttonsEnum.REQUEST_FLOOR
@@ -229,7 +229,7 @@ export function pendingToOngoing(state) {
     currentButtonPress === buttonsEnum.CALL_DOWN ||
     (currentButtonPress === buttonsEnum.REQUEST_FLOOR && currentFloor !== 0)
   ) {
-    movingDirection = movingDirectionEnum.MOVING_DOWN;
+    movingDirection = movingDirectionEnum.DOWN;
     // Add those floor that are lower than current floor to the ongoing queue
     // and remove those floor in pending queue
     liftOngoingFloor = liftPendingFloor.filter((floor) => {
