@@ -13,6 +13,7 @@ const defaultState = Object.freeze({
   sensorState: sensorStateEnum.OFF,
   liftOngoingFloor: [],
   liftPendingFloor: [],
+  buttonPress: "",
   movingDirection: movingDirectionEnum.NOT_MOVING,
   lock: false,
 });
@@ -20,15 +21,33 @@ const defaultState = Object.freeze({
 export default function liftReducer(state = defaultState, action) {
   switch (action.type) {
     case liftActions.MOVE_UP: {
+      const movingDirection = action.movingDirection;
       return Object.freeze({
         ...state,
         currentFloor: state.currentFloor + 1,
+        movingDirection,
       });
     }
     case liftActions.MOVE_DOWN: {
+      const movingDirection = action.movingDirection;
       return Object.freeze({
         ...state,
         currentFloor: state.currentFloor - 1,
+        movingDirection,
+      });
+    }
+    case liftActions.MOVE_STOP: {
+      const movingDirection = action.movingDirection;
+      return Object.freeze({
+        ...state,
+        movingDirection,
+      });
+    }
+    case liftActions.MOVE_PENDING: {
+      const movingDirection = action.movingDirection;
+      return Object.freeze({
+        ...state,
+        movingDirection,
       });
     }
     case liftActions.CLOSE_DOOR: {
@@ -69,9 +88,11 @@ export default function liftReducer(state = defaultState, action) {
     }
     case liftActions.CALL_LIFT: {
       const callFloor = action.callFloor;
-      const { liftOngoingFloor, liftPendingFloor } = utils.sortOngoing(
+      const buttonPress = action.buttonPress;
+      const { liftOngoingFloor, liftPendingFloor } = utils.addToOngoing(
         state,
-        callFloor
+        callFloor,
+        buttonPress
       );
       return Object.freeze({
         ...state,
@@ -81,28 +102,41 @@ export default function liftReducer(state = defaultState, action) {
     }
     case liftActions.PENDING_LIFT: {
       const pendingFloor = action.pendingFloor;
+      const buttonPress = action.buttonPress;
+      const { liftPendingFloor } = utils.addToPending(
+        state,
+        pendingFloor,
+        buttonPress
+      );
       return Object.freeze({
         ...state,
-        liftPendingFloor: utils.sortPending(state, pendingFloor),
+        liftPendingFloor,
       });
     }
     case liftActions.PENDING_TO_ONGOING: {
+      const { movingDirection, liftOngoingFloor, liftPendingFloor } =
+        utils.pendingToOngoing(state);
+      utils.pendingToOngoing(state);
       return Object.freeze({
         ...state,
-        liftOngoingFloor: [...state.liftPendingFloor],
-        liftPendingFloor: [],
+        movingDirection,
+        liftOngoingFloor,
+        liftPendingFloor,
       });
     }
     case liftActions.REMOVE_CALL: {
+      const { buttonPress, liftOngoingFloor } = utils.removeReachedCall(state);
       return Object.freeze({
         ...state,
-        liftOngoingFloor: utils.removeReachedCall(state),
+        buttonPress,
+        liftOngoingFloor,
       });
     }
-    case liftActions.SET_DIRECTION: {
+    case liftActions.SET_BUTTON_PRESS: {
+      const buttonPress = action.buttonPress;
       return Object.freeze({
         ...state,
-        movingDirection: action.direction,
+        buttonPress,
       });
     }
     case liftActions.SET_LOCK: {

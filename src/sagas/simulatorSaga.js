@@ -124,6 +124,7 @@ function* processPassengerOutside({ startingFloor }) {
   });
 
   if (enterLiftResult.failure) {
+    yield delay(Math.round(Math.random() * 1000));
     // press the up down button again and wait for the lift
     yield pressUpDownButton({ startingFloor });
     yield processPassengerOutside({ startingFloor });
@@ -141,6 +142,7 @@ function* processPassengerInside({ destinationFloor }) {
   });
 
   if (exitLiftResult.failure) {
+    yield delay(Math.round(Math.random() * 1000));
     // Press the floor button again and wait for the lift to reach
     yield pressFloorButton({ destinationFloor });
     yield processPassengerInside({ destinationFloor });
