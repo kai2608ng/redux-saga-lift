@@ -176,10 +176,6 @@ function* addPassenger() {
   yield put(liftActions.decrementPassengers());
 }
 
-function* test() {
-  yield call(addPassenger);
-}
-
 function* pollPassengers() {
   yield fork(function* () {
     while (true) {
@@ -192,6 +188,5 @@ function* pollPassengers() {
 
 export default function* simulatorSaga() {
   /* This saga checks for any issues with the lift. */
-  // yield pollPassengers();
-  yield call(test);
+  yield pollPassengers();
 }

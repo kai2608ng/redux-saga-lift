@@ -1,15 +1,31 @@
 export function getDoorState(state) {
-  return state.doorState;
+  return state.lift.doorState;
 }
 
 export function getCurrentFloor(state) {
-  return state.currentFloor;
+  return state.lift.currentFloor;
 }
 
 export function getTargetFloor(state) {
-  return state.targetFloor;
+  return state.lift.onGoingQueue[0];
 }
 
 export function getMovingDirection(state) {
-  return state.movingDirection;
+  return state.lift.movingDirection;
+}
+
+export function getSensorState(state){
+  return state.lift.sensorState
+}
+
+export function getOngoingQueue(state){
+  return state.lift.onGoingQueue
+}
+
+export function getPendingQueue(state){
+  return state.lift.pendingQueue
+}
+
+export function getIsOngoing(state){
+  return state.lift.onGoingQueue.length
 }

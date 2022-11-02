@@ -10,11 +10,9 @@ import rootSaga from "./sagas";
 import * as serviceWorker from "./serviceWorker";
 
 import "./index.css";
-import { all, delay, put, takeEvery, takeLeading } from "redux-saga/effects";
-
 // eslint-disable-next-line no-underscore-dangle
 const composeEnhancers =
-  window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__({ maxAge: 15 }) || compose;
+  window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__({ maxAge: 50 }) || compose;
 
 const sagaMiddleware = createSagaMiddleware();
 

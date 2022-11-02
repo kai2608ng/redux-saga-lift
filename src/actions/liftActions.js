@@ -14,15 +14,34 @@ export const DECREMENT_PASSENGERS = "@lift/DECREMENT_PASSENGERS";
 
 export const SET_LIFT = "@lift/SET_LIFT";
 export const GET_LIFT = "@lift/GET_LIFT";
+export const DEL_LIFT = "@lift/DEL_LIFT"
 
-export const setLift = (floor) => ({
+export const SET_DIRECTION = "@lift/SET_DIRECTION"
+
+export const PENDING_TO_ONGOING = "@lift/PENDING_TO_ONGOING"
+
+export const setLift = (button, data) => ({
   type: SET_LIFT,
-  floor,
+  button,
+  data,
 });
 
 export const getLift = () => ({
   type: GET_LIFT,
 });
+
+export const delLift = () => ({
+  type: DEL_LIFT
+})
+
+export const setDirection = (movingDirection) => ({
+  type: SET_DIRECTION,
+  movingDirection
+})
+
+export const pendingToOngoing = () => ({
+  type: PENDING_TO_ONGOING
+})
 
 export const buttonPress = ({ button, data }) => ({
   type: BUTTON_PRESS,
