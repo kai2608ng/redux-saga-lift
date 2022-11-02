@@ -1,16 +1,28 @@
-export const BUTTON_PRESS = '@lift/BUTTON_PRESS';
+export const BUTTON_PRESS = "@lift/BUTTON_PRESS";
 
-export const MOVE_UP = '@lift/MOVE_UP';
-export const MOVE_DOWN = '@lift/MOVE_DOWN';
+export const MOVE_UP = "@lift/MOVE_UP";
+export const MOVE_DOWN = "@lift/MOVE_DOWN";
 
-export const CLOSE_DOOR = '@lift/CLOSE_DOOR';
-export const OPEN_DOOR = '@lift/OPEN_DOOR';
+export const CLOSE_DOOR = "@lift/CLOSE_DOOR";
+export const OPEN_DOOR = "@lift/OPEN_DOOR";
 
-export const DOOR_SENSOR_OFF = '@lift/DOOR_SENSOR_OFF';
-export const DOOR_SENSOR_ON = '@lift/DOOR_SENSOR_ON';
+export const DOOR_SENSOR_OFF = "@lift/DOOR_SENSOR_OFF";
+export const DOOR_SENSOR_ON = "@lift/DOOR_SENSOR_ON";
 
-export const INCREMENT_PASSENGERS = '@lift/INCREMENT_PASSENGERS';
-export const DECREMENT_PASSENGERS = '@lift/DECREMENT_PASSENGERS';
+export const INCREMENT_PASSENGERS = "@lift/INCREMENT_PASSENGERS";
+export const DECREMENT_PASSENGERS = "@lift/DECREMENT_PASSENGERS";
+
+export const SET_LIFT = "@lift/SET_LIFT";
+export const GET_LIFT = "@lift/GET_LIFT";
+
+export const setLift = (floor) => ({
+  type: SET_LIFT,
+  floor,
+});
+
+export const getLift = () => ({
+  type: GET_LIFT,
+});
 
 export const buttonPress = ({ button, data }) => ({
   type: BUTTON_PRESS,

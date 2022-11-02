@@ -1,29 +1,27 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { Provider } from 'react-redux';
-import { applyMiddleware, createStore, compose } from 'redux';
-import createSagaMiddleware from 'redux-saga';
+import React from "react";
+import ReactDOM from "react-dom";
+import { Provider } from "react-redux";
+import { applyMiddleware, createStore, compose } from "redux";
+import createSagaMiddleware from "redux-saga";
 
-import App from './components/App';
-import rootReducer from './reducers';
-import rootSaga from './sagas';
-import * as serviceWorker from './serviceWorker';
+import App from "./components/App";
+import rootReducer from "./reducers";
+import rootSaga from "./sagas";
+import * as serviceWorker from "./serviceWorker";
 
-import './index.css';
+import "./index.css";
+import { all, delay, put, takeEvery, takeLeading } from "redux-saga/effects";
 
 // eslint-disable-next-line no-underscore-dangle
-const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__({ maxAge: 15 }) || compose;
+const composeEnhancers =
+  window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__({ maxAge: 15 }) || compose;
 
 const sagaMiddleware = createSagaMiddleware();
 
 const store = createStore(
   rootReducer,
   {},
-  composeEnhancers(
-    applyMiddleware(
-      sagaMiddleware,
-    ),
-  ),
+  composeEnhancers(applyMiddleware(sagaMiddleware))
 );
 
 sagaMiddleware.run(rootSaga);
@@ -32,7 +30,7 @@ ReactDOM.render(
   <Provider store={store}>
     <App />
   </Provider>,
-  document.getElementById('root'),
+  document.getElementById("root")
 );
 
 // If you want your app to work offline and load faster, you can change

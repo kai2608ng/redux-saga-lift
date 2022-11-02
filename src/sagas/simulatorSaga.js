@@ -1,20 +1,13 @@
-import {
-  call,
-  delay,
-  fork,
-  put,
-  race,
-  select,
-  take,
-} from 'redux-saga/effects';
+import { call, delay, fork, put, race, select, take } from "redux-saga/effects";
 
-import * as liftActions from '../actions/liftActions';
-import buttonsEnum from '../enums/buttonsEnum';
-import doorStateEnum from '../enums/doorStateEnum';
-import sensorStateEnum from '../enums/sensorStateEnum';
+import * as liftActions from "../actions/liftActions";
+import buttonsEnum from "../enums/buttonsEnum";
+import doorStateEnum from "../enums/doorStateEnum";
+import sensorStateEnum from "../enums/sensorStateEnum";
+import * as selectors from "./selectors";
 
 function* getStartingFloor() {
-  const maximumFloor = yield select(state => state.lift.maximumFloor);
+  const maximumFloor = yield select((state) => state.lift.maximumFloor);
   /* There is 50 percent chance passenger will be coming from the ground floor. */
   if (Math.random() > 0.5) {
     return 0;
@@ -25,7 +18,7 @@ function* getStartingFloor() {
 }
 
 function* getDestinationFloor({ startingFloor }) {
-  const maximumFloor = yield select(state => state.lift.maximumFloor);
+  const maximumFloor = yield select((state) => state.lift.maximumFloor);
   /* Passengers from higher floors are always going to the ground floor. */
   if (startingFloor > 0) {
     return 0;
@@ -36,37 +29,55 @@ function* getDestinationFloor({ startingFloor }) {
 }
 
 function* pressUpDownButton({ startingFloor }) {
-  /* Passengers from the fround floor move up, passengers from other floors move down. */
-  if (startingFloor === 0) {
-    yield put(liftActions.buttonPress({
-      button: buttonsEnum.CALL_UP,
-      data: startingFloor,
-    }));
-  } else {
-    yield put(liftActions.buttonPress({
-      button: buttonsEnum.CALL_DOWN,
-      data: startingFloor,
-    }));
+  const doorState = yield select(selectors.getDoorState);
+  const currentFloor = yield select(selectors.getCurrentFloor);
+
+  // Passengers don't need to pressed the button again if the lift is opened
+  if (doorState === doorStateEnum.CLOSED || currentFloor !== startingFloor) {
+    /* Passengers from the fround floor move up, passengers from other floors move down. */
+    if (startingFloor === 0) {
+      yield put(
+        liftActions.buttonPress({
+          button: buttonsEnum.CALL_UP,
+          data: startingFloor,
+        })
+      );
+    } else {
+      yield put(
+        liftActions.buttonPress({
+          button: buttonsEnum.CALL_DOWN,
+          data: startingFloor,
+        })
+      );
+    }
   }
 }
 
 function* pressFloorButton({ destinationFloor }) {
   /* Take between 0 and 1 seconds to press the button. */
   yield delay(Math.round(Math.random() * 1 * 1000));
-  /* Press the button. */
-  yield put(liftActions.buttonPress({
-    button: buttonsEnum.REQUEST_FLOOR,
-    data: destinationFloor,
-  }));
+
+  const doorState = yield select(selectors.getDoorState);
+  const currentFloor = yield select(selectors.getCurrentFloor);
+
+  // Passengers don't need to pressed the button again if the lift is opened
+  if (doorState === doorStateEnum.CLOSED || currentFloor !== destinationFloor)
+    /* Press the button. */
+    yield put(
+      liftActions.buttonPress({
+        button: buttonsEnum.REQUEST_FLOOR,
+        data: destinationFloor,
+      })
+    );
 }
 
 function* awaitLift({ floor }) {
-  const doorState = yield select(state => state.lift.doorState);
+  const doorState = yield select((state) => state.lift.doorState);
   if (doorState !== doorStateEnum.OPEN) {
     yield take(liftActions.OPEN_DOOR);
   }
 
-  const currentFloor = yield select(state => state.lift.currentFloor);
+  const currentFloor = yield select((state) => state.lift.currentFloor);
   if (currentFloor !== floor) {
     yield take(liftActions.CLOSE_DOOR);
     yield awaitLift({ floor });
@@ -74,14 +85,14 @@ function* awaitLift({ floor }) {
 }
 
 function* blockSensor() {
-  const sensorState = yield select(state => state.lift.sensorState);
+  const sensorState = yield select((state) => state.lift.sensorState);
   if (sensorState !== sensorStateEnum.ON) {
     yield put(liftActions.doorSensorOn());
   }
 }
 
 function* unblockSensor() {
-  const sensorState = yield select(state => state.lift.sensorState);
+  const sensorState = yield select((state) => state.lift.sensorState);
   if (sensorState !== sensorStateEnum.OFF) {
     yield put(liftActions.doorSensorOff());
   }
@@ -101,7 +112,7 @@ function* enterLift() {
 }
 
 function* exitLift() {
-  /* Take between 0 and 3 seconds to start exiting. */
+  /* Take between 0 and 5 seconds to start exiting. */
   yield delay(Math.round(Math.random() * 5 * 1000));
   /* Block sensor. */
   yield blockSensor();
@@ -124,6 +135,8 @@ function* processPassengerOutside({ startingFloor }) {
   });
 
   if (enterLiftResult.failure) {
+    // Press the button again and wait for the lift reach to their destination
+    yield pressUpDownButton({ startingFloor });
     yield processPassengerOutside({ startingFloor });
   }
 }
@@ -139,6 +152,8 @@ function* processPassengerInside({ destinationFloor }) {
   });
 
   if (exitLiftResult.failure) {
+    // Press the button again and wait for the lift reach to their destination
+    yield pressFloorButton({ destinationFloor });
     yield processPassengerOutside({ destinationFloor });
   }
 }
@@ -161,6 +176,10 @@ function* addPassenger() {
   yield put(liftActions.decrementPassengers());
 }
 
+function* test() {
+  yield call(addPassenger);
+}
+
 function* pollPassengers() {
   yield fork(function* () {
     while (true) {
@@ -173,5 +192,6 @@ function* pollPassengers() {
 
 export default function* simulatorSaga() {
   /* This saga checks for any issues with the lift. */
-  yield pollPassengers();
+  // yield pollPassengers();
+  yield call(test);
 }

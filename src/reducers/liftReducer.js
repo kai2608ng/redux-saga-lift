@@ -1,7 +1,13 @@
-import * as liftActions from '../actions/liftActions';
-import * as reducerActions from '../actions/reducerActions';
-import doorStateEnum from '../enums/doorStateEnum';
-import sensorStateEnum from '../enums/sensorStateEnum';
+import * as liftActions from "../actions/liftActions";
+import * as reducerActions from "../actions/reducerActions";
+import doorStateEnum from "../enums/doorStateEnum";
+import sensorStateEnum from "../enums/sensorStateEnum";
+import movingDirectionEnum from "../enums/movingDirectionEnum";
+import * as utils from "../utils";
+
+let floorPressed = [];
+
+for (let i = 0; i <= 10; i++) floorPressed.push(null);
 
 const defaultState = Object.freeze({
   currentFloor: 0,
@@ -9,6 +15,10 @@ const defaultState = Object.freeze({
   passengersCount: 0,
   doorState: doorStateEnum.CLOSED,
   sensorState: sensorStateEnum.OFF,
+  movingDirection: movingDirectionEnum.NOT_MOVING,
+  onGoingQueue: [],
+  pendingQueue: [],
+  floorPressed,
 });
 
 export default function liftReducer(state = defaultState, action) {
@@ -59,6 +69,20 @@ export default function liftReducer(state = defaultState, action) {
       return Object.freeze({
         ...state,
         passengersCount: state.passengersCount - 1,
+      });
+    }
+    case liftActions.SET_LIFT: {
+      const { button, data } = action;
+      const { onGoingQueue, pendingQueue } = utils.setLift(state, button, data);
+      return Object.freeze({
+        ...state,
+        onGoingQueue,
+        pendingQueue,
+      });
+    }
+    case liftActions.GET_LIFT: {
+      return Object.freeze({
+        ...state,
       });
     }
     case reducerActions.RESET: {
