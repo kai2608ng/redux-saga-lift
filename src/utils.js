@@ -31,11 +31,13 @@ export function setLift(state, button, floor) {
   let floorPressed = [...state.floorPressed];
   let onGoingQueue = [...state.onGoingQueue];
   let pendingQueue = [...state.pendingQueue];
-  const { currentFloor, movingDirection } = state;
+  let { currentFloor, movingDirection } = state;
 
   if (movingDirection === movingDirectionEnum.NOT_MOVING) {
     floorPressed[floor] = button;
     onGoingQueue.push(floor);
+    movingDirection = currentFloor < floor ? movingDirectionEnum.UP : movingDirectionEnum.DOWN
+    return {movingDirection, floorPressed, onGoingQueue, pendingQueue}
   }
 
   if (movingDirection === movingDirectionEnum.UP) {
@@ -44,13 +46,14 @@ export function setLift(state, button, floor) {
 
       if (currentFloor < floor) {
         onGoingQueue.push(floor);
-        onGoingQueue.sort();
+        // Ascending Order
+        onGoingQueue.sort((a, b) => {return a > b ? 1 : a < b ? -1 : 0});
 
         for (let i = onGoingQueue.length - 2; i >= 0; i--) {
           // Remove all CALL_DOWN that are lower than the highest floor
           if (floorPressed[onGoingQueue[i]] === buttonsEnum.CALL_DOWN) {
+            pendingQueue.push(onGoingQueue[i]);
             onGoingQueue.splice(i, 1);
-            pendingQueue.push(i);
           }
         }
       } else {
@@ -64,6 +67,8 @@ export function setLift(state, button, floor) {
     ) {
       floorPressed[floor] = button;
     }
+
+    return { movingDirection, floorPressed, onGoingQueue, pendingQueue };
   }
 
   if (movingDirection === movingDirectionEnum.DOWN) {
@@ -75,22 +80,24 @@ export function setLift(state, button, floor) {
       } else {
         pendingQueue.push(floor);
       }
-
+      // Descending Order
       onGoingQueue.sort((a, b) => {
         return a > b ? -1 : a < b ? 1 : 0;
       });
     }
+    
+    return { movingDirection, floorPressed, onGoingQueue, pendingQueue };
   }
-
-  return { floorPressed, onGoingQueue, pendingQueue };
 }
 
 export function pendingToOngoing(state) {
   let onGoingQueue = [];
   let pendingQueue = [...state.pendingQueue];
-  const { movingDirection, currentFloor } = state;
+  let floorPressed = [...state.floorPressed]
+  let { movingDirection, currentFloor } = state;
   
   if (movingDirection === movingDirectionEnum.UP) {
+    // Descending Order
     pendingQueue.sort((a, b) => {
       return a > b ? -1 : a < b ? 1 : 0;
     });
@@ -98,17 +105,30 @@ export function pendingToOngoing(state) {
     const index = searchFloor(pendingQueue, currentFloor, movingDirection);
     onGoingQueue = pendingQueue.slice(index);
     pendingQueue = pendingQueue.slice(0, index);
+    // Switch to moving downwards
+    movingDirection = movingDirectionEnum.DOWN
+    return { movingDirection, onGoingQueue, pendingQueue };
   }
 
   if (movingDirection === movingDirectionEnum.DOWN) {
-    pendingQueue.sort();
+    // Ascending Order
+    pendingQueue.sort((a, b) => {return a > b ? 1 : a < b ? -1 : 0});
     // Get the split point for ongoing and pending
     const index = searchFloor(pendingQueue, currentFloor, movingDirection);
     onGoingQueue = pendingQueue.slice(index);
     pendingQueue = pendingQueue.slice(0, index);
-  }
 
-  return { onGoingQueue, pendingQueue };
+    for (let i = onGoingQueue.length - 2; i >= 0; i--) {
+      // Remove all CALL_DOWN that are lower than the highest floor
+      if (floorPressed[onGoingQueue[i]] === buttonsEnum.CALL_DOWN) {
+        pendingQueue.push(onGoingQueue[i]);
+        onGoingQueue.splice(i, 1);
+      }
+    }
+    // Switch to moving upwards
+    movingDirection = movingDirectionEnum.UP
+    return { movingDirection, onGoingQueue, pendingQueue };
+  }
 }
 
 export function deleteLift(state) {

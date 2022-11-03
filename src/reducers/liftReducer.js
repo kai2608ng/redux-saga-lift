@@ -73,9 +73,10 @@ export default function liftReducer(state = defaultState, action) {
     }
     case liftActions.SET_LIFT: {
       const { button, data } = action;
-      const { floorPressed, onGoingQueue, pendingQueue } = utils.setLift(state, button, data);
+      const { movingDirection, floorPressed, onGoingQueue, pendingQueue } = utils.setLift(state, button, data);
       return Object.freeze({
         ...state,
+        movingDirection,
         floorPressed,
         onGoingQueue,
         pendingQueue,
@@ -97,9 +98,10 @@ export default function liftReducer(state = defaultState, action) {
       })
     }
     case liftActions.PENDING_TO_ONGOING: {
-      const {onGoingQueue, pendingQueue} = utils.pendingToOngoing(state)
+      const {movingDirection, onGoingQueue, pendingQueue} = utils.pendingToOngoing(state)
       return Object.freeze({
         ...state,
+        movingDirection,
         onGoingQueue,
         pendingQueue
       })

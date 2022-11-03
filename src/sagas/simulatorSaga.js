@@ -32,9 +32,9 @@ function* pressUpDownButton({ startingFloor }) {
   const doorState = yield select(selectors.getDoorState);
   const currentFloor = yield select(selectors.getCurrentFloor);
 
-  // Passengers don't need to pressed the button again if the lift is opened
+  // Passengers don't need to press the button if the lift is opened
   if (doorState === doorStateEnum.CLOSED || currentFloor !== startingFloor) {
-    /* Passengers from the fround floor move up, passengers from other floors move down. */
+    /* Passengers from the ground floor move up, passengers from other floors move down. */
     if (startingFloor === 0) {
       yield put(
         liftActions.buttonPress({
@@ -60,7 +60,7 @@ function* pressFloorButton({ destinationFloor }) {
   const doorState = yield select(selectors.getDoorState);
   const currentFloor = yield select(selectors.getCurrentFloor);
 
-  // Passengers don't need to pressed the button again if the lift is opened
+  // Passengers don't need to press the button if the lift is opened
   if (doorState === doorStateEnum.CLOSED || currentFloor !== destinationFloor)
     /* Press the button. */
     yield put(
@@ -154,7 +154,7 @@ function* processPassengerInside({ destinationFloor }) {
   if (exitLiftResult.failure) {
     // Press the button again and wait for the lift reach to their destination
     yield pressFloorButton({ destinationFloor });
-    yield processPassengerOutside({ destinationFloor });
+    yield processPassengerInside({ destinationFloor });
   }
 }
 
